@@ -14,12 +14,21 @@ class AccountManagementPage extends StatefulWidget {
 }
 
 class _AccountManagementPageState extends State<AccountManagementPage> {
-  final _nameController = TextEditingController(text: 'Aryan Malhotra');
-  final _mobileController = TextEditingController(text: '9030522754');
-  final _emailController = TextEditingController(text: 'aryan@example.com');
+  late final TextEditingController _nameController;
+  late final TextEditingController _mobileController;
+  late final TextEditingController _emailController;
   bool _isLoading = false;
   XFile? _imageFile;
   final ImagePicker _picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    final user = authService.currentUser.value;
+    _nameController = TextEditingController(text: user?.name ?? 'Aryan Malhotra');
+    _mobileController = TextEditingController(text: user?.mobile ?? '9030522754');
+    _emailController = TextEditingController(text: user?.email ?? 'aryan@example.com');
+  }
 
   Future<void> _pickImage() async {
     try {
@@ -129,6 +138,10 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
 
   Future<void> _saveChanges() async {
     setState(() => _isLoading = true);
+    await authService.updateProfile(
+      name: _nameController.text,
+      profilePic: _imageFile?.path,
+    );
     await Future.delayed(const Duration(seconds: 1)); // Simulate network request
     if (!mounted) return;
     setState(() => _isLoading = false);
@@ -138,6 +151,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
 
   @override
   Widget build(BuildContext context) {
+    final user = authService.currentUser.value;
     return Scaffold(
       backgroundColor: bg,
       appBar: AppBar(
@@ -171,7 +185,7 @@ class _AccountManagementPageState extends State<AccountManagementPage> {
                                 ? Image.network(_imageFile!.path, fit: BoxFit.cover)
                                 : Image.file(File(_imageFile!.path), fit: BoxFit.cover))
                             : Image.network(
-                                'https://api.dicebear.com/7.x/avataaars/png?seed=Aryan',
+                                user?.profilePic ?? 'https://api.dicebear.com/7.x/avataaars/png?seed=${user?.name ?? 'Aryan'}',
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, size: 50, color: Colors.grey),
                               ),

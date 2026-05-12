@@ -27,12 +27,13 @@ class Product {
 }
 
 class Shop {
-  const Shop(this.name, this.block, this.type, this.rating, this.orders);
+  const Shop(this.name, this.block, this.type, this.rating, this.orders, this.location);
   final String name;
   final String block;
   final String type;
   final String rating;
   final String orders;
+  final LatLng location;
 }
 
 class Stat {

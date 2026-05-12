@@ -65,10 +65,10 @@ class EntryPage extends StatelessWidget {
         const SizedBox(height: 20),
         const Text('Choose your journey', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: ink)),
         const SizedBox(height: 32),
-        GradientButton('Shop as User', Icons.storefront, () => push(context, const RoleShell(role: Role.user))),
+        GradientButton('Shop as User', Icons.storefront, () => Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const RoleShell(role: Role.user)), (r) => false)),
         const SizedBox(height: 14),
         OutlinedButton.icon(
-          onPressed: () => push(context, const RoleShell(role: Role.seller)),
+          onPressed: () => Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const RoleShell(role: Role.seller)), (r) => false),
           icon: const Icon(Icons.inventory_2_outlined),
           label: const Text('Continue as Seller', style: TextStyle(fontWeight: FontWeight.w900)),
           style: OutlinedButton.styleFrom(
@@ -80,7 +80,10 @@ class EntryPage extends StatelessWidget {
         ),
         const Spacer(),
         TextButton(
-          onPressed: () => authService.logout(),
+          onPressed: () {
+            authService.logout();
+            Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const EntryPage()), (r) => false);
+          },
           child: const Text('SIGN OUT', style: TextStyle(letterSpacing: 2, fontSize: 10, fontWeight: FontWeight.w900, color: muted)),
         ),
       ],

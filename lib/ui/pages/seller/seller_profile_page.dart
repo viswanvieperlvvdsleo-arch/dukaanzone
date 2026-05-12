@@ -40,7 +40,10 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
             const SizedBox(height: 48),
             Center(
               child: TextButton.icon(
-                onPressed: () => authService.logout(),
+                onPressed: () {
+                  authService.logout();
+                  Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const EntryPage()), (r) => false);
+                },
                 icon: const Icon(Icons.power_settings_new, color: Colors.redAccent),
                 label: const Text('Terminate Session', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w900)),
               ),

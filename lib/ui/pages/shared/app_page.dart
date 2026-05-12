@@ -8,12 +8,22 @@ class AppPage extends StatelessWidget {
   final List<Widget> children;
   final double maxWidth;
 
-@override
+  @override
   Widget build(BuildContext context) {
     return Center(
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: maxWidth),
-        child: ListView(padding: const EdgeInsets.fromLTRB(18, 22, 18, 34), children: children),
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(18, 22, 18, 34),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate(children),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

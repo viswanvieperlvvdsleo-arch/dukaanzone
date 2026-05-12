@@ -14,10 +14,14 @@ class MainHeader extends StatelessWidget implements PreferredSizeWidget {
     final compact = MediaQuery.sizeOf(context).width < 640;
     return AppBar(
       automaticallyImplyLeading: false,
+      leading: Navigator.canPop(context) ? IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: onExit,
+      ) : null,
       toolbarHeight: 70,
       backgroundColor: Colors.white.withValues(alpha: .96),
       surfaceTintColor: Colors.white,
-      titleSpacing: 16,
+      titleSpacing: Navigator.canPop(context) ? 0 : 16,
       title: Row(
         children: [
           const Brand(size: 42),
@@ -28,9 +32,9 @@ class MainHeader extends StatelessWidget implements PreferredSizeWidget {
               children: [
                 Text('DukaanZone', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900, color: ink, letterSpacing: -.4)),
                 Row(children: [
-                  Icon(Icons.location_on, size: 10, color: primary),
-                  SizedBox(width: 3),
-                  Text('YOUR NEIGHBORHOOD', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 8, fontWeight: FontWeight.w900, color: primary, letterSpacing: 1.5)),
+                  const Icon(Icons.location_on, size: 10, color: primary),
+                  const SizedBox(width: 3),
+                  const Expanded(child: Text('YOUR NEIGHBORHOOD', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 8, fontWeight: FontWeight.w900, color: primary, letterSpacing: 1.5))),
                 ]),
               ],
             ),
@@ -38,22 +42,19 @@ class MainHeader extends StatelessWidget implements PreferredSizeWidget {
           if (!compact) ...[
             const SizedBox(width: 24),
             Expanded(
-              child: InkWell(
-                borderRadius: BorderRadius.circular(18),
-                onTap: () => push(context, SearchPage(role: role)),
-                child: Container(
-                  height: 42,
-                  constraints: const BoxConstraints(maxWidth: 560),
-                  decoration: BoxDecoration(color: const Color(0xFFF4F6F8), borderRadius: BorderRadius.circular(18), border: Border.all(color: const Color(0xFFEFF2F5))),
-                  child: Row(
-                    children: [
-                      const SizedBox(width: 12),
-                      const Icon(Icons.search, size: 18, color: muted),
-                      const SizedBox(width: 8),
-                      Expanded(child: Text(hint, style: const TextStyle(color: muted, fontSize: 13, fontWeight: FontWeight.w600))),
-                      const Icon(Icons.mic_none, size: 17, color: muted),
-                      const SizedBox(width: 12),
-                    ],
+              child: Container(
+                height: 42,
+                constraints: const BoxConstraints(maxWidth: 560),
+                decoration: BoxDecoration(color: const Color(0xFFF4F6F8), borderRadius: BorderRadius.circular(18), border: Border.all(color: const Color(0xFFEFF2F5))),
+                child: TextField(
+                  onChanged: (val) => globalSearchQuery.value = val,
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.search, size: 18, color: muted),
+                    suffixIcon: const Icon(Icons.mic_none, size: 17, color: muted),
+                    hintText: hint,
+                    hintStyle: const TextStyle(color: muted, fontSize: 13, fontWeight: FontWeight.w600),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
                   ),
                 ),
               ),
@@ -163,8 +164,8 @@ class _HeroCarouselState extends State<HeroCarousel> {
 _timer = Timer.periodic(const Duration(seconds: 4), (timer) {
       if (_pageController.hasClients) {
         _pageController.nextPage(
-          duration: const Duration(milliseconds: 800),
-          curve: Curves.easeOutQuart,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeOutCubic,
         );
       }
     });
@@ -179,23 +180,25 @@ _timer = Timer.periodic(const Duration(seconds: 4), (timer) {
 
 @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 420, // Match HeroProductCard height
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(40),
-        child: PageView.builder(
-          controller: _pageController,
-          itemBuilder: (context, index) {
-            final product = catalogProducts[index % catalogProducts.length];
-            return HeroProductCard(
-              key: ValueKey(product.id),
-              title: product.name,
-              price: product.price,
-              shop: product.shop,
-              icon: product.icon,
-              onBuy: () => push(context, CheckoutPage(product: product)),
-            );
-          },
+    return RepaintBoundary(
+      child: SizedBox(
+        height: 420,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(40),
+          child: PageView.builder(
+            controller: _pageController,
+            itemBuilder: (context, index) {
+              final product = catalogProducts[index % catalogProducts.length];
+              return HeroProductCard(
+                key: ValueKey(product.id),
+                title: product.name,
+                price: product.price,
+                shop: product.shop,
+                icon: product.icon,
+                onBuy: () => push(context, CheckoutPage(product: product)),
+              );
+            },
+          ),
         ),
       ),
     );
@@ -347,46 +350,48 @@ class LargeProductCard extends StatelessWidget {
 
 @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.zero,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(32),
-        onTap: () => push(context, ProductDetailPage(product: product)),
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            AspectRatio(
-              aspectRatio: 1,
-              child: Container(
-                decoration: BoxDecoration(color: product.tint, borderRadius: BorderRadius.circular(26)),
-                child: Stack(children: [
-                  Center(child: Icon(product.icon, size: 92, color: ink.withValues(alpha: .50))),
-                  Positioned(left: 6, top: 6, child: GlassRoundIcon(icon: Icons.location_on, size: 28, iconSize: 14, iconColor: primary, onTap: () {
-                    globalMapState.value = MapState(mode: MapMode.routing, destinationName: product.shop);
-                  })),
-                  const Positioned(right: 6, top: 6, child: FavoriteButton(size: 28, iconSize: 14)),
-                  Positioned(left: 12, bottom: 12, child: BadgeText(product.badge, dark: true)),
-                ]),
+    return RepaintBoundary(
+      child: Card(
+        margin: EdgeInsets.zero,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(32),
+          onTap: () => push(context, ProductDetailPage(product: product)),
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              AspectRatio(
+                aspectRatio: 1,
+                child: Container(
+                  decoration: BoxDecoration(color: product.tint, borderRadius: BorderRadius.circular(26)),
+                  child: Stack(children: [
+                    Center(child: Icon(product.icon, size: 92, color: ink.withValues(alpha: .50))),
+                    Positioned(left: 6, top: 6, child: GlassRoundIcon(icon: Icons.location_on, size: 28, iconSize: 14, iconColor: primary, onTap: () {
+                      globalMapState.value = MapState(mode: MapMode.routing, destinationName: product.shop);
+                    })),
+                    const Positioned(right: 6, top: 6, child: FavoriteButton(size: 28, iconSize: 14)),
+                    Positioned(left: 12, bottom: 12, child: BadgeText(product.badge, dark: true)),
+                  ]),
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            Text(product.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 18, height: 1.04, fontWeight: FontWeight.w900, color: ink)),
-            const SizedBox(height: 6),
-            Text('Sold by ${product.shop}', maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, height: 1.15)),
-            const SizedBox(height: 8),
-            Text(product.price, style: const TextStyle(color: success, fontSize: 20, fontWeight: FontWeight.w900)),
-            const SizedBox(height: 8),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(999),
-              child: LinearProgressIndicator(value: product.id == 'prod-2' ? .18 : .72, minHeight: 5, color: primary, backgroundColor: const Color(0xFFE2E8F0)),
-            ),
-            const SizedBox(height: 8),
-            Row(children: [
-              Expanded(child: Text(product.stock, maxLines: 2, style: const TextStyle(fontSize: 12, color: ink, fontWeight: FontWeight.w700))),
-              SizedBox(height: 40, width: 76, child: GradientButton('Buy', Icons.shopping_cart, () => push(context, CheckoutPage(product: product)), compact: true)),
+              const SizedBox(height: 12),
+              Text(product.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 18, height: 1.04, fontWeight: FontWeight.w900, color: ink)),
+              const SizedBox(height: 6),
+              Text('Sold by ${product.shop}', maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600, height: 1.15)),
+              const SizedBox(height: 8),
+              Text(product.price, style: const TextStyle(color: success, fontSize: 20, fontWeight: FontWeight.w900)),
+              const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(999),
+                child: LinearProgressIndicator(value: product.id == 'prod-2' ? .18 : .72, minHeight: 5, color: primary, backgroundColor: const Color(0xFFE2E8F0)),
+              ),
+              const SizedBox(height: 8),
+              Row(children: [
+                Expanded(child: Text(product.stock, maxLines: 2, style: const TextStyle(fontSize: 12, color: ink, fontWeight: FontWeight.w700))),
+                SizedBox(height: 40, width: 76, child: GradientButton('Buy', Icons.shopping_cart, () => push(context, CheckoutPage(product: product)), compact: true)),
+              ]),
+              const SizedBox(height: 4),
             ]),
-            const SizedBox(height: 4),
-          ]),
+          ),
         ),
       ),
     );
@@ -461,26 +466,28 @@ class CompactProductTile extends StatelessWidget {
   const CompactProductTile({super.key, required this.product});
   final Product product;
   @override
-  Widget build(BuildContext context) => Card(
-        margin: const EdgeInsets.only(bottom: 12),
-        child: ListTile(
-          contentPadding: const EdgeInsets.all(14),
-          leading: CircleAvatar(backgroundColor: product.tint, child: Icon(product.icon, color: ink)),
-          title: Text(product.name, style: const TextStyle(fontWeight: FontWeight.w900)),
-          subtitle: Text(product.shop, style: const TextStyle(color: muted)),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton.filledTonal(
-                onPressed: () {
-                  globalMapState.value = MapState(mode: MapMode.routing, destinationName: product.shop);
-                },
-                icon: const Icon(Icons.directions, size: 18),
-                style: IconButton.styleFrom(minimumSize: const Size(32, 32), fixedSize: const Size(32, 32), padding: EdgeInsets.zero, backgroundColor: const Color(0xFFEAF2FF), foregroundColor: primary),
-              ),
-              const SizedBox(width: 8),
-              Text(product.price, style: const TextStyle(fontWeight: FontWeight.w900, color: success)),
-            ],
+  Widget build(BuildContext context) => RepaintBoundary(
+        child: Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: ListTile(
+            contentPadding: const EdgeInsets.all(14),
+            leading: CircleAvatar(backgroundColor: product.tint, child: Icon(product.icon, color: ink)),
+            title: Text(product.name, style: const TextStyle(fontWeight: FontWeight.w900)),
+            subtitle: Text(product.shop, style: const TextStyle(color: muted)),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton.filledTonal(
+                  onPressed: () {
+                    globalMapState.value = MapState(mode: MapMode.routing, destinationName: product.shop);
+                  },
+                  icon: const Icon(Icons.directions, size: 18),
+                  style: IconButton.styleFrom(minimumSize: const Size(32, 32), fixedSize: const Size(32, 32), padding: EdgeInsets.zero, backgroundColor: const Color(0xFFEAF2FF), foregroundColor: primary),
+                ),
+                const SizedBox(width: 8),
+                Text(product.price, style: const TextStyle(fontWeight: FontWeight.w900, color: success)),
+              ],
+            ),
           ),
         ),
       );

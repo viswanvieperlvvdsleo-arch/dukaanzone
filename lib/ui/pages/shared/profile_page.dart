@@ -51,7 +51,10 @@ class ProfilePage extends StatelessWidget {
             // Sign Out Button
             Center(
               child: TextButton.icon(
-                onPressed: () => authService.logout(),
+                onPressed: () {
+                  authService.logout();
+                  Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const EntryPage()), (r) => false);
+                },
                 icon: const Icon(Icons.logout, color: Colors.redAccent),
                 label: const Text('Sign Out', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w800, fontSize: 16)),
               ),
@@ -69,37 +72,46 @@ class _UserHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 72,
-          height: 72,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: primary.withOpacity(0.1),
-            image: const DecorationImage(
-              image: NetworkImage('https://api.dicebear.com/7.x/avataaars/png?seed=Aryan'),
-              fit: BoxFit.cover,
+    return ValueListenableBuilder<UserModel?>(
+      valueListenable: authService.currentUser,
+      builder: (context, user, _) {
+        return Row(
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: primary.withOpacity(0.1),
+                border: Border.all(color: primary.withOpacity(0.2), width: 2),
+              ),
+              child: ClipOval(
+                child: Image.network(
+                  user?.profilePic ?? 'https://api.dicebear.com/7.x/avataaars/png?seed=${user?.name ?? 'Aryan'}',
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, size: 40, color: primary),
+                ),
+              ),
             ),
-          ),
-        ),
-        const SizedBox(width: 20),
-        const Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Aryan Malhotra', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
-              SizedBox(height: 4),
-              Text('+91 90305 22754', style: TextStyle(color: muted, fontWeight: FontWeight.w600)),
-            ],
-          ),
-        ),
-        IconButton(
-          onPressed: () => push(context, const AccountManagementPage()),
-          icon: const Icon(Icons.edit_outlined, color: primary),
-          style: IconButton.styleFrom(backgroundColor: primary.withOpacity(0.1)),
-        )
-      ],
+            const SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(user?.name ?? 'Anonymous User', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
+                  const SizedBox(height: 4),
+                  Text(user?.mobile ?? 'No Mobile Number', style: const TextStyle(color: muted, fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+            IconButton(
+              onPressed: () => push(context, const AccountManagementPage()),
+              icon: const Icon(Icons.edit_outlined, color: primary),
+              style: IconButton.styleFrom(backgroundColor: primary.withOpacity(0.1)),
+            )
+          ],
+        );
+      },
     );
   }
 }
@@ -122,12 +134,17 @@ class _WalletSection extends StatelessWidget {
             child: const Text('2', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 12)),
           ),
         ),
-        _SettingsTile(
-          icon: Icons.savings_outlined,
-          title: 'Total Savings',
-          subtitle: 'Saved ₹450 buying local this week',
-          onTap: () {},
-          iconColor: success,
+        ValueListenableBuilder<SavingsData>(
+          valueListenable: savingsService.data,
+          builder: (context, data, _) {
+            return _SettingsTile(
+              icon: Icons.savings_outlined,
+              title: 'Total Savings',
+              subtitle: 'Saved ₹${data.totalSaved.toStringAsFixed(0)} buying local this month',
+              onTap: () => push(context, SavingsDashboardPage()),
+              iconColor: success,
+            );
+          },
         ),
         _SettingsTile(
           icon: Icons.history,
@@ -303,34 +320,6 @@ class _PreferencesSection extends StatelessWidget {
             },
           ),
         ),
-        _SettingsTile(
-          icon: Icons.language,
-          title: 'Language',
-          subtitle: 'English (US)',
-          onTap: () {
-            showModalBottomSheet(
-              context: context,
-              backgroundColor: Theme.of(context).cardTheme.color,
-              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
-              builder: (context) => Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Select Language', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
-                    const SizedBox(height: 24),
-                    ListTile(title: const Text('English (US)', style: TextStyle(fontWeight: FontWeight.w800)), trailing: const Icon(Icons.check, color: primary), onTap: () => Navigator.pop(context)),
-                    ListTile(title: const Text('Hindi (हिन्दी)', style: TextStyle(fontWeight: FontWeight.w600)), onTap: () => Navigator.pop(context)),
-                    ListTile(title: const Text('Telugu (తెలుగు)', style: TextStyle(fontWeight: FontWeight.w600)), onTap: () => Navigator.pop(context)),
-                    const SizedBox(height: 16),
-                  ],
-                ),
-              ),
-            );
-          },
-          isLast: true,
-        ),
       ],
     );
   }
@@ -352,12 +341,12 @@ class _SupportSection extends StatelessWidget {
           icon: Icons.report_problem_outlined,
           title: 'Report an Issue',
           subtitle: 'Handshake problems or bad merchants',
-          onTap: () {},
+          onTap: () => push(context, ReportIssuePage()),
         ),
         _SettingsTile(
           icon: Icons.description_outlined,
           title: 'Terms & Privacy Policy',
-          onTap: () {},
+          onTap: () => push(context, TermsPrivacyPage()),
           isLast: true,
         ),
       ],

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dukaan_zone_flutter/dukaan.dart';
 
-enum UserAuthStep { login, register, otp, personalize }
+enum UserAuthStep { login, register, otp, personalize, forgotPassword }
 
 class UserAuthPage extends StatefulWidget {
   const UserAuthPage({super.key, this.isRegister = false});
@@ -18,6 +18,7 @@ class _UserAuthPageState extends State<UserAuthPage> {
   final _emailController = TextEditingController();
   final _mobileController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   
   bool _loading = false;
   String? _profilePic;
@@ -29,6 +30,13 @@ class _UserAuthPageState extends State<UserAuthPage> {
   }
 
   Future<void> _handleAction() async {
+    if (_currentStep == UserAuthStep.register) {
+      if (_passwordController.text != _confirmPasswordController.text) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Passwords do not match!')));
+        return;
+      }
+    }
+    
     setState(() => _loading = true);
     await Future.delayed(const Duration(seconds: 1));
     if (!mounted) return;
@@ -68,7 +76,14 @@ class _UserAuthPageState extends State<UserAuthPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: bg,
-      appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent, 
+        elevation: 0,
+        leading: _currentStep != UserAuthStep.login ? IconButton(
+          icon: const Icon(Icons.arrow_back, color: ink),
+          onPressed: () => setState(() => _currentStep = UserAuthStep.login),
+        ) : null,
+      ),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(28),
@@ -90,6 +105,7 @@ class _UserAuthPageState extends State<UserAuthPage> {
       case UserAuthStep.register: return _buildRegister();
       case UserAuthStep.otp: return _buildOtp();
       case UserAuthStep.personalize: return _buildPersonalize();
+      case UserAuthStep.forgotPassword: return _buildForgotPassword();
     }
   }
 
@@ -115,7 +131,13 @@ class _UserAuthPageState extends State<UserAuthPage> {
           decoration: InputDecoration(labelText: 'Password', prefixIcon: const Icon(Icons.lock_outline), border: OutlineInputBorder(borderRadius: BorderRadius.circular(16))),
         ),
         const SizedBox(height: 12),
-        Align(alignment: Alignment.centerRight, child: TextButton(onPressed: () {}, child: const Text('Forgot Password?', style: TextStyle(color: primary, fontWeight: FontWeight.w800)))),
+        Align(
+          alignment: Alignment.centerRight, 
+          child: TextButton(
+            onPressed: () => setState(() => _currentStep = UserAuthStep.forgotPassword), 
+            child: const Text('Forgot Password?', style: TextStyle(color: primary, fontWeight: FontWeight.w800))
+          )
+        ),
         const SizedBox(height: 32),
         _loading ? const Center(child: CircularProgressIndicator()) : GradientButton('Login', Icons.login, _handleAction),
         const SizedBox(height: 24),
@@ -160,10 +182,45 @@ class _UserAuthPageState extends State<UserAuthPage> {
           obscureText: true,
           decoration: InputDecoration(labelText: 'Password', prefixIcon: const Icon(Icons.lock_outline), border: OutlineInputBorder(borderRadius: BorderRadius.circular(16))),
         ),
+        const SizedBox(height: 20),
+        TextField(
+          controller: _confirmPasswordController,
+          obscureText: true,
+          decoration: InputDecoration(labelText: 'Confirm Password', prefixIcon: const Icon(Icons.lock_outline), border: OutlineInputBorder(borderRadius: BorderRadius.circular(16))),
+        ),
         const SizedBox(height: 32),
         _loading ? const Center(child: CircularProgressIndicator()) : GradientButton('Get Started', Icons.arrow_forward, _handleAction),
         const SizedBox(height: 24),
         SocialButton(label: 'Sign up with Google', icon: Icons.g_mobiledata, onTap: () {}),
+      ],
+    );
+  }
+
+  Widget _buildForgotPassword() {
+    return Column(
+      key: const ValueKey('forgot'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Icon(Icons.lock_reset_outlined, size: 64, color: primary),
+        const SizedBox(height: 24),
+        const Text('Reset Password', style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: ink)),
+        const SizedBox(height: 8),
+        const Text('Enter your email to receive a reset link.', style: TextStyle(color: muted, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 32),
+        TextField(
+          controller: _emailController,
+          decoration: InputDecoration(labelText: 'Email Address', prefixIcon: const Icon(Icons.email_outlined), border: OutlineInputBorder(borderRadius: BorderRadius.circular(16))),
+        ),
+        const SizedBox(height: 32),
+        _loading ? const Center(child: CircularProgressIndicator()) : GradientButton('Send Reset Link', Icons.send_outlined, () async {
+          setState(() => _loading = true);
+          await Future.delayed(const Duration(seconds: 1));
+          setState(() {
+            _loading = false;
+            _currentStep = UserAuthStep.login;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Reset link sent to your email!')));
+        }),
       ],
     );
   }

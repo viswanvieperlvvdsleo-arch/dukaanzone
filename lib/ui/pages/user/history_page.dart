@@ -8,48 +8,35 @@ class UserHistoryPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: AppPage(
-        maxWidth: 1000,
-        children: [
-          const PageTitle('Purchase History', 'Your neighborhood spending at a glance.'),
-          const SizedBox(height: 24),
-          
-          _HistoryItem(
-            merchant: 'Pooja General Store',
-            date: 'Today, 10:42 AM',
-            amount: '₹202.00',
-            items: 'Organic Milk, Brown Eggs',
-            icon: Icons.store_outlined,
-          ),
-          const SizedBox(height: 16),
-          
-          _HistoryItem(
-            merchant: 'Tech Haven',
-            date: 'Yesterday, 06:15 PM',
-            amount: '₹12,499.00',
-            items: 'Noise-Cancelling Pro Earbuds',
-            icon: Icons.smartphone_outlined,
-          ),
-          const SizedBox(height: 16),
-          
-          _HistoryItem(
-            merchant: 'Daily Bakes',
-            date: 'May 02, 09:10 AM',
-            amount: '₹45.00',
-            items: 'Butter Croissant',
-            icon: Icons.bakery_dining_outlined,
-          ),
-          const SizedBox(height: 16),
-          
-          _HistoryItem(
-            merchant: 'Aman Snacks',
-            date: 'April 30, 04:30 PM',
-            amount: '₹120.00',
-            items: 'Samosa Platter, Tea',
-            icon: Icons.restaurant_outlined,
-          ),
-          const SizedBox(height: 32),
-        ],
+      body: ValueListenableBuilder<List<Map<String, dynamic>>>(
+        valueListenable: globalPaymentHistory,
+        builder: (context, history, child) {
+          return AppPage(
+            maxWidth: 1000,
+            children: [
+              const PageTitle('Purchase History', 'Your neighborhood spending at a glance.'),
+              const SizedBox(height: 24),
+              
+              if (history.isEmpty)
+                const Center(child: Padding(
+                  padding: EdgeInsets.all(40.0),
+                  child: Text('No transactions yet.', style: TextStyle(color: muted, fontWeight: FontWeight.w600)),
+                )),
+
+              for (final tx in history.reversed) ...[
+                _HistoryItem(
+                  merchant: tx['merchant'] as String,
+                  date: tx['date'] as String,
+                  amount: tx['amount'] as String,
+                  items: tx['items'] as String,
+                  icon: tx['icon'] as IconData,
+                ),
+                const SizedBox(height: 16),
+              ],
+              const SizedBox(height: 32),
+            ],
+          );
+        },
       ),
     );
   }

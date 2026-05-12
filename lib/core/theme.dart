@@ -22,8 +22,8 @@ final neonGlow = [
   )
 ];
 
-final shadowSm = [BoxShadow(color: Colors.black.withOpacity(0.035), blurRadius: 12, offset: const Offset(0, 5))];
-final shadowLg = [BoxShadow(color: Colors.black.withOpacity(0.10), blurRadius: 30, offset: const Offset(0, 18))];
+final shadowSm = [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 3))];
+final shadowLg = [BoxShadow(color: Colors.black.withOpacity(0.09), blurRadius: 20, offset: const Offset(0, 12))];
 
 class AppTheme {
   static ThemeData get light => ThemeData(
@@ -32,10 +32,20 @@ class AppTheme {
     scaffoldBackgroundColor: bgLight,
     colorScheme: ColorScheme.fromSeed(seedColor: primary, brightness: Brightness.light),
     fontFamily: 'Inter',
+    splashFactory: InkRipple.splashFactory,
     cardTheme: CardThemeData(
       color: Colors.white,
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+    ),
+    pageTransitionsTheme: const PageTransitionsTheme(
+      builders: {
+        TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+        TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
+        TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
+      },
     ),
   );
 
@@ -45,10 +55,20 @@ class AppTheme {
     scaffoldBackgroundColor: bgDark,
     colorScheme: ColorScheme.fromSeed(seedColor: primary, brightness: Brightness.dark, background: bgDark),
     fontFamily: 'Inter',
+    splashFactory: InkRipple.splashFactory,
     cardTheme: CardThemeData(
       color: const Color(0xFF1A1F2B),
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+    ),
+    pageTransitionsTheme: const PageTransitionsTheme(
+      builders: {
+        TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+        TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
+        TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
+      },
     ),
   );
 }

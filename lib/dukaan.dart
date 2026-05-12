@@ -43,3 +43,8 @@ export 'ui/pages/user/reviews_page.dart';
 export 'ui/pages/user/saved_page.dart';
 export 'ui/pages/user/manual_payment_page.dart';
 export 'ui/pages/user/scan_page.dart';
+export 'ui/pages/user/savings_dashboard_page.dart';
+export 'ui/pages/user/report_issue_page.dart';
+export 'ui/pages/user/language_selection_page.dart';
+export 'ui/pages/shared/terms_privacy_page.dart';
+export 'ui/pages/shared/search_results_page.dart';
